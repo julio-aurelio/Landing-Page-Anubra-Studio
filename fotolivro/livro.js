@@ -29,7 +29,7 @@ function el(tag, classe, texto) {
 function foto(url, alt) {
   if (!url) return el('div', 'sem-foto', 'Foto em breve');
   const img = el('img');
-  img.src = url; img.alt = alt || ''; img.draggable = false;
+  img.decoding = 'async'; img.src = url; img.alt = alt || ''; img.draggable = false;
   return img;
 }
 
@@ -83,6 +83,112 @@ function pagina(p, numero) {
   return pag;
 }
 
+// ===== Celular em pé: folha curva feita só com transform (a placa de vídeo faz o trabalho) =====
+// A biblioteca repete a página no verso quando mostra uma página só e recorta tudo a cada quadro.
+const TIRAS = 5;
+
+function criarFolheador(raiz, paginas, inicio, aoVirar, altura) {
+  let atual = inicio, giro = null, quadro = 0;
+  raiz.classList.add('folheador');
+  raiz.style.height = `${altura}px`;
+  const sombra = el('div', 'sombra-virada');
+  raiz.append(sombra);
+
+  const exibir = i => {
+    paginas.forEach((p, n) => p.classList.toggle('visivel', n === i));
+    for (const n of [i - 1, i + 1, i + 2]) paginas[n]?.querySelectorAll('img').forEach(img => img.decode?.().catch(() => {}));
+  };
+
+  function criarFolha(pagina) {
+    const largura = raiz.clientWidth / TIRAS, folha = el('div', 'vira'), tiras = [];
+    let pai = folha;
+    for (let k = 0; k < TIRAS; k++) {
+      const tira = el('div', 'tira'), frente = el('div', 'tira-frente'), luz = el('div', 'tira-luz'), copia = pagina.cloneNode(true);
+      tira.style.width = `${largura + 1}px`;  // 1px a mais esconde a emenda entre as tiras
+      tira.style.left = k ? `${largura}px` : '0';
+      copia.style.width = `${raiz.clientWidth}px`;
+      copia.style.left = `${-k * largura}px`;
+      copia.querySelectorAll('img').forEach(img => { img.decoding = 'sync'; });
+      luz.style.backgroundSize = `${raiz.clientWidth}px 100%`;  // um brilho só atravessando as tiras, sem listras
+      luz.style.backgroundPosition = `${-k * largura}px 0`;
+      frente.append(copia, luz);
+      tira.append(frente, el('div', 'tira-verso'));
+      pai.append(tira);
+      pai = tira;
+      tiras.push({ tira, luz });
+    }
+    raiz.append(folha);
+    return { folha, tiras };
+  }
+
+  function desenhar(p) {
+    const curva = Math.sin(Math.PI * p);
+    giro.tiras.forEach(({ tira, luz }, k) => {
+      tira.style.transform = `rotateY(${k ? curva * 15 : -150 * p}deg)`;  // depois de 150° a folha já saiu da tela
+      luz.style.opacity = curva;
+    });
+    sombra.style.opacity = curva * .7;
+  }
+
+  function terminar(alvo) {
+    cancelAnimationFrame(quadro);
+    const virou = giro.frente ? alvo === 1 : alvo === 0;
+    if (virou) atual = giro.destino;
+    giro.folha.remove();
+    giro = null;
+    sombra.style.opacity = 0;
+    exibir(atual);
+    if (virou) aoVirar(atual);
+  }
+
+  function animar(alvo) {
+    cancelAnimationFrame(quadro);
+    giro.alvo = alvo;
+    const de = giro.p, distancia = Math.abs(alvo - de), inicioAnim = performance.now(), duracao = 220 + 500 * distancia;
+    const curvaTempo = distancia === 1 ? t => t * t * (3 - 2 * t) : t => 1 - (1 - t) ** 2;  // ao soltar o dedo, continua sem frear antes
+    const passo = agora => {
+      const t = Math.min((agora - inicioAnim) / duracao, 1);
+      giro.p = de + (alvo - de) * curvaTempo(t);
+      desenhar(giro.p);
+      if (t < 1) quadro = requestAnimationFrame(passo); else terminar(alvo);
+    };
+    quadro = requestAnimationFrame(passo);
+  }
+
+  function comecar(frente) {
+    if (giro) terminar(giro.alvo);  // toque rápido: termina a virada anterior na hora
+    const destino = atual + (frente ? 1 : -1);
+    if (!paginas[destino]) return false;
+    giro = { frente, destino, p: frente ? 0 : 1, alvo: frente ? 0 : 1, ...criarFolha(paginas[frente ? atual : destino]) };
+    exibir(frente ? destino : atual);
+    desenhar(giro.p);
+    return true;
+  }
+
+  exibir(atual);
+  return {
+    comecar,
+    mover(dx) {
+      if (!giro) return;
+      const andou = dx / (raiz.clientWidth * .85);
+      giro.p = Math.max(0, Math.min(1, giro.frente ? -andou : 1 - andou));
+      cancelAnimationFrame(quadro);
+      quadro = requestAnimationFrame(() => giro && desenhar(giro.p));
+    },
+    soltar(dx, velocidade) {
+      if (!giro) return;
+      const sentido = giro.frente ? -1 : 1;
+      const completa = dx * sentido > raiz.clientWidth * .2 || velocidade * sentido > .45;
+      animar(giro.frente === completa ? 1 : 0);
+    },
+    flipNext() { if (comecar(true)) animar(1); },
+    flipPrev() { if (comecar(false)) animar(0); },
+    getCurrentPageIndex: () => atual,
+    getOrientation: () => 'portrait',
+    destroy() { cancelAnimationFrame(quadro); raiz.remove(); },
+  };
+}
+
 function montar(d, inicio = 0) {
   const t = tela();
   dados = d; botaoFinal = null; chaveTela = t.chave; capaDura = t.modo !== 'retrato';
@@ -93,9 +199,16 @@ function montar(d, inicio = 0) {
   const paginas = [capa(d), dedicatoria, ...d.paginas.map((p, i) => pagina(p, i + 2))];  // a dedicatória é a página 1
   if (paginas.length % 2) paginas.push(folha('')[0]);  // a contracapa precisa cair no verso da última folha
   paginas.push(folha('guarda', true)[0], contracapa(d));
-  paginas.forEach((p, i) => p.classList.add(i % 2 ? 'esquerda' : 'direita'));
+  paginas.forEach((p, i) => p.classList.add(i % 2 && t.modo !== 'retrato' ? 'esquerda' : 'direita'));
   total = paginas.length;
   $('#livro').append(...paginas);
+
+  if (t.modo === 'retrato') {
+    livro = criarFolheador($('#livro'), paginas, inicio, mostrar, t.ph);
+    $('#livro').removeAttribute('aria-busy');
+    mostrar(inicio);
+    return;
+  }
 
   const tamanho = t.modo === 'pc'
     ? { width: 550, height: 760, minWidth: 260, maxWidth: 1000, minHeight: 360, maxHeight: 1382, usePortrait: true }
@@ -155,6 +268,7 @@ const noLivro = t => {
 };
 
 function pegarPagina(t, frente) {
+  if (livro.comecar) return livro.comecar(frente);
   const i = livro.getCurrentPageIndex();
   if (livro.getState() !== 'read' || (frente ? i >= total - 1 : i === 0)) return false;
   const r = livro.getBoundsRect();
@@ -166,6 +280,7 @@ function pegarPagina(t, frente) {
 }
 
 function soltarPagina(t, completar) {
+  if (livro.soltar) return livro.soltar(completar ? t.clientX - dedo.x : 0, completar ? dedo.velocidade : 0);
   const pos = noLivro(t);
   if (completar) {
     const r = livro.getBoundsRect();
@@ -178,7 +293,9 @@ function soltarPagina(t, completar) {
 mesa.addEventListener('touchstart', e => {
   if (!noCelular()) return;
   e.stopPropagation();
-  dedo = e.touches.length === 1 ? { x: e.touches[0].clientX, puxando: false, travado: false } : null;
+  dedo = e.touches.length === 1
+    ? { x: e.touches[0].clientX, ultimoX: e.touches[0].clientX, ultimoT: e.timeStamp, velocidade: 0, puxando: false, travado: false }
+    : null;
 }, { capture: true, passive: true });
 
 mesa.addEventListener('touchmove', e => {
@@ -186,11 +303,13 @@ mesa.addEventListener('touchmove', e => {
   e.stopPropagation();
   if (!dedo || dedo.travado) return;
   const t = e.touches[0], dx = t.clientX - dedo.x;
+  if (e.timeStamp > dedo.ultimoT) dedo.velocidade = (t.clientX - dedo.ultimoX) / (e.timeStamp - dedo.ultimoT);
+  dedo.ultimoX = t.clientX; dedo.ultimoT = e.timeStamp;
   if (!dedo.puxando && Math.abs(dx) > 10) {
     dedo.puxando = pegarPagina(t, dx < 0);
     dedo.travado = !dedo.puxando;
   }
-  if (dedo.puxando) livro.userMove(noLivro(t), true);
+  if (dedo.puxando) livro.mover ? livro.mover(dx) : livro.userMove(noLivro(t), true);
 }, { capture: true, passive: true });
 
 mesa.addEventListener('touchend', e => {

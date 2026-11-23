@@ -89,6 +89,18 @@ body[data-modo=retrato], body[data-modo=deitado] { overscroll-behavior: none; }
 [data-modo=retrato] .progresso, [data-modo=deitado] .progresso { display: block; width: calc(100% - 16px); height: 3px; border-radius: 3px; background: rgb(255 255 255 / .14); overflow: hidden; }
 #barra { display: block; height: 100%; width: 0; background: var(--destaque); transition: width .5s; }
 
+/* folha curva do celular em pé: só transform e opacity, para rodar liso */
+.folheador { position: relative; width: 100%; perspective: 1500px; clip-path: inset(-120px -120px -120px 0); }  /* a folha some na lombada */
+.folheador > .pagina { position: absolute; inset: 0; visibility: hidden; }
+.folheador > .pagina.visivel { visibility: visible; }
+.sombra-virada { position: absolute; inset: 0; z-index: 2; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgb(0 0 0 / .6), rgb(0 0 0 / .1)); will-change: opacity; }
+.vira { position: absolute; inset: 0; z-index: 3; pointer-events: none; transform-style: preserve-3d; }
+.tira { position: absolute; top: 0; height: 100%; transform-origin: left center; transform-style: preserve-3d; will-change: transform; }
+.tira-frente, .tira-verso { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.tira-frente .pagina { position: absolute; top: 0; height: 100%; }
+.tira-verso { transform: rotateY(180deg); background: color-mix(in srgb, var(--pagina) 86%, #000); }
+.tira-luz { position: absolute; inset: 0; z-index: 4; opacity: 0; background-image: linear-gradient(90deg, rgb(0 0 0 / .34), rgb(0 0 0 / .05) 30%, rgb(255 255 255 / .2) 60%, rgb(0 0 0 / .18)); background-repeat: no-repeat; will-change: opacity; }
+
 [data-modo=retrato] .voltar { padding: 10px 12px; font-size: 13px; }
 [data-modo=retrato] .progresso { margin-top: 8px; }
 [data-modo=retrato] .controles { width: 100%; justify-content: space-between; padding: 6px 12px max(8px, env(safe-area-inset-bottom)); }
