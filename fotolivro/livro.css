@@ -80,5 +80,34 @@ body { background: radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--
 #indicador { min-width: 130px; text-align: center; font-size: 14px; }
 .dica { padding: 6px 16px 10px; font-size: 12px; opacity: .6; text-align: center; }
 
+/* ===== Celular ===== */
+.progresso { display: none; }
+body[data-modo=retrato], body[data-modo=deitado] { overscroll-behavior: none; }
+[data-modo=retrato] #livro, [data-modo=deitado] #livro { filter: none; touch-action: none; }  /* filter deixa a virada travada no celular */
+[data-modo=retrato] .mesa, [data-modo=deitado] .mesa { box-shadow: 0 14px 30px rgb(0 0 0 / .5); }
+[data-modo=retrato] .dica, [data-modo=deitado] .dica { display: none; }
+[data-modo=retrato] .progresso, [data-modo=deitado] .progresso { display: block; width: calc(100% - 16px); height: 3px; border-radius: 3px; background: rgb(255 255 255 / .14); overflow: hidden; }
+#barra { display: block; height: 100%; width: 0; background: var(--destaque); transition: width .5s; }
+
+[data-modo=retrato] .voltar { padding: 10px 12px; font-size: 13px; }
+[data-modo=retrato] .progresso { margin-top: 8px; }
+[data-modo=retrato] .controles { width: 100%; justify-content: space-between; padding: 6px 12px max(8px, env(safe-area-inset-bottom)); }
+[data-modo=retrato] #indicador { font-size: 13px; }
+[data-modo=retrato] .corpo { font-size: 4.5cqw; }
+[data-modo=retrato] .legenda { font-size: 3.8cqw; }
+[data-modo=retrato] .num { font-size: 3.2cqw; }
+[data-modo=retrato] .pagina h3 { font-size: 9.5cqw; }
+[data-modo=retrato] .dedicatoria .corpo { font-size: 6cqw; }
+[data-modo=retrato] .capa p { font-size: 4.6cqw; }
+[data-modo=retrato] .capa .autor { font-size: 3.3cqw; }
+[data-modo=retrato] .botao { font-size: 4.2cqw; }
+
+/* deitado: o livro usa a altura toda e os controles vão para as laterais */
+[data-modo=deitado] .voltar { position: fixed; z-index: 5; top: 0; left: 0; padding: 10px; font-size: 12px; }
+[data-modo=deitado] .progresso { position: fixed; z-index: 5; bottom: 2px; left: 8px; }
+[data-modo=deitado] .controles { position: fixed; inset: 0; z-index: 4; justify-content: space-between; padding: 0 max(8px, env(safe-area-inset-left)); pointer-events: none; }
+[data-modo=deitado] .controles button { pointer-events: auto; background: rgb(0 0 0 / .35); }
+[data-modo=deitado] #indicador { position: fixed; left: 10px; bottom: 10px; min-width: 0; font-size: 11px; opacity: .75; }
+
 /* a virada só acontece quando a pessoa pede, então continua; some só a entrada automática */
 @media (prefers-reduced-motion: reduce) { .mesa { animation: none; } }

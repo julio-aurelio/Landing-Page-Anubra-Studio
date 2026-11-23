@@ -4,7 +4,20 @@ const VARIAVEIS = { fundo: '--fundo', capa: '--capa', capa_texto: '--capa-texto'
 
 const $ = s => document.querySelector(s);
 const mesa = $('#mesa');
-let livro = null, total = 0, botaoFinal = null;
+const toque = matchMedia('(pointer: coarse)');
+let livro = null, dados = null, total = 0, botaoFinal = null, capaDura = true, chaveTela = '';
+
+// Celular em pé: uma página ocupando a tela. Deitado: página dupla na altura toda.
+function tela() {
+  const w = innerWidth, h = document.documentElement.clientHeight;
+  if (w > 600 && !(toque.matches && h <= 500)) return { modo: 'pc', chave: 'pc' };
+  if (w < h) {
+    const pw = w - 16;
+    return { modo: 'retrato', chave: `retrato:${w}`, pw, ph: Math.min(h - 104, Math.round(pw * 1.62)), mesa: pw };
+  }
+  const pw = Math.min(Math.round((h - 16) * .72), Math.floor((w - 120) / 2));
+  return { modo: 'deitado', chave: `deitado:${w}`, pw, ph: Math.round(pw / .72), mesa: pw * 2 };
+}
 
 function el(tag, classe, texto) {
   const n = document.createElement(tag);
@@ -23,7 +36,7 @@ function foto(url, alt) {
 // A biblioteca vira o elemento .pagina; o conteúdo fica dentro de .miolo > .conteudo
 function folha(classe, dura) {
   const pag = el('div', `pagina ${classe}`);
-  if (dura) pag.dataset.density = 'hard';
+  if (dura && capaDura) pag.dataset.density = 'hard';  // com uma página só, a capa dura não aparece virando
   const miolo = el('div', 'miolo'), conteudo = el('div', 'conteudo');
   miolo.append(conteudo);
   pag.append(miolo);
@@ -70,7 +83,11 @@ function pagina(p, numero) {
   return pag;
 }
 
-function montar(d) {
+function montar(d, inicio = 0) {
+  const t = tela();
+  dados = d; botaoFinal = null; chaveTela = t.chave; capaDura = t.modo !== 'retrato';
+  document.body.dataset.modo = t.modo;
+  mesa.style.width = t.mesa ? `${t.mesa}px` : '';
   const [dedicatoria, cd] = folha('dedicatoria', true);
   if (d.dedicatoria) cd.append(el('p', 'corpo', d.dedicatoria));
   const paginas = [capa(d), dedicatoria, ...d.paginas.map((p, i) => pagina(p, i + 2))];  // a dedicatória é a página 1
@@ -80,16 +97,29 @@ function montar(d) {
   total = paginas.length;
   $('#livro').append(...paginas);
 
+  const tamanho = t.modo === 'pc'
+    ? { width: 550, height: 760, minWidth: 260, maxWidth: 1000, minHeight: 360, maxHeight: 1382, usePortrait: true }
+    : { width: t.pw, height: t.ph, minWidth: t.pw, maxWidth: t.pw, minHeight: t.ph, maxHeight: t.ph, usePortrait: t.modo === 'retrato' };
   livro = new St.PageFlip($('#livro'), {
-    width: 550, height: 760, size: 'stretch', minWidth: 260, maxWidth: 1000, minHeight: 360, maxHeight: 1382,
-    showCover: true, usePortrait: true, maxShadowOpacity: .55, mobileScrollSupport: false,
-    flippingTime: 1000,
+    ...tamanho, size: 'stretch', startPage: inicio,
+    showCover: true, maxShadowOpacity: .55, mobileScrollSupport: false,
+    flippingTime: t.modo === 'pc' ? 1000 : 800,
   });
   livro.loadFromHTML(paginas);
   livro.on('flip', e => mostrar(e.data));
   livro.on('changeOrientation', () => mostrar(livro.getCurrentPageIndex()));
   $('#livro').removeAttribute('aria-busy');
-  mostrar(0);
+  mostrar(inicio);
+}
+
+// Girar o celular muda o formato das páginas, então o livro é refeito na mesma página
+function remontar() {
+  const i = livro.getCurrentPageIndex();
+  livro.destroy();
+  const novo = el('div');
+  novo.id = 'livro';
+  mesa.append(novo);
+  montar(dados, i);
 }
 
 function mostrar(i) {
@@ -102,15 +132,93 @@ function mostrar(i) {
   $('#proxima').disabled = ultima;
   if (botaoFinal) botaoFinal.tabIndex = ultima ? 0 : -1;
   const esquerda = i % 2 ? i : i - 1;
-  $('#indicador').textContent = i === 0 ? 'Capa' : ultima ? 'Contracapa'
+  $('#barra').style.width = `${i / (total - 1) * 100}%`;
+  $('#indicador').textContent = i === 0 ? (document.body.dataset.modo === 'pc' ? 'Capa' : 'Deslize para abrir') : ultima ? 'Contracapa'
     : retrato ? `Página ${i} de ${total - 2}` : `Páginas ${esquerda}–${esquerda + 1} de ${total - 2}`;
 }
 
-$('#proxima').addEventListener('click', () => livro?.flipNext());
-$('#anterior').addEventListener('click', () => livro?.flipPrev());
+// Puxar pelo canto de baixo faz a dobra diagonal, como virar um livro de verdade
+$('#proxima').addEventListener('click', () => livro?.flipNext('bottom'));
+$('#anterior').addEventListener('click', () => livro?.flipPrev('bottom'));
 addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight') livro?.flipNext();
-  if (e.key === 'ArrowLeft') livro?.flipPrev();
+  if (e.key === 'ArrowRight') livro?.flipNext('bottom');
+  if (e.key === 'ArrowLeft') livro?.flipPrev('bottom');
+});
+
+// ===== Gesto no celular: a página acompanha o dedo =====
+// O deslize da biblioteca vira para o lado errado quando dura mais de 250 ms, por isso os toques param aqui.
+let dedo = null;
+const noCelular = () => document.body.dataset.modo !== 'pc';
+const noLivro = t => {
+  const b = $('#livro .stf__block').getBoundingClientRect();
+  return { x: t.clientX - b.left, y: Math.max(1, Math.min(t.clientY - b.top, b.height - 1)) };
+};
+
+function pegarPagina(t, frente) {
+  const i = livro.getCurrentPageIndex();
+  if (livro.getState() !== 'read' || (frente ? i >= total - 1 : i === 0)) return false;
+  const r = livro.getBoundsRect();
+  const y = noLivro(t).y >= r.height / 2 ? r.height - 2 : 2;
+  const x = frente ? r.left + r.pageWidth * 2 - 10 : r.left + 10;
+  livro.startUserTouch({ x, y });
+  livro.userMove({ x: x + (frente ? -8 : 8), y }, true);
+  return true;
+}
+
+function soltarPagina(t, completar) {
+  const pos = noLivro(t);
+  if (completar) {
+    const r = livro.getBoundsRect();
+    pos.x = r.left + r.pageWidth + (t.clientX < dedo.x ? -6 : 6);  // passa da lombada para terminar a virada
+    livro.userMove(pos, true);
+  }
+  livro.userStop(pos);
+}
+
+mesa.addEventListener('touchstart', e => {
+  if (!noCelular()) return;
+  e.stopPropagation();
+  dedo = e.touches.length === 1 ? { x: e.touches[0].clientX, puxando: false, travado: false } : null;
+}, { capture: true, passive: true });
+
+mesa.addEventListener('touchmove', e => {
+  if (!noCelular()) return;
+  e.stopPropagation();
+  if (!dedo || dedo.travado) return;
+  const t = e.touches[0], dx = t.clientX - dedo.x;
+  if (!dedo.puxando && Math.abs(dx) > 10) {
+    dedo.puxando = pegarPagina(t, dx < 0);
+    dedo.travado = !dedo.puxando;
+  }
+  if (dedo.puxando) livro.userMove(noLivro(t), true);
+}, { capture: true, passive: true });
+
+mesa.addEventListener('touchend', e => {
+  if (!noCelular()) return;
+  e.stopPropagation();
+  if (!dedo) return;
+  const t = e.changedTouches[0], dx = t.clientX - dedo.x, gesto = dedo;
+  if (gesto.puxando) soltarPagina(t, Math.abs(dx) >= 40);
+  dedo = null;
+  if (e.target.closest('a') && !gesto.puxando) return;  // deixa o botão da contracapa funcionar
+  e.preventDefault();
+  if (gesto.puxando || gesto.travado || Math.abs(dx) > 10) return;
+  const i = livro.getCurrentPageIndex();
+  if (i > 0 && (i >= total - 1 || t.clientX < innerWidth * .35)) livro.flipPrev('bottom');
+  else livro.flipNext('bottom');
+}, { capture: true });
+
+mesa.addEventListener('touchcancel', e => {
+  if (!noCelular()) return;
+  e.stopPropagation();
+  if (dedo?.puxando) soltarPagina(e.changedTouches[0], false);
+  dedo = null;
+}, { capture: true, passive: true });
+
+let esperaGiro;
+addEventListener('resize', () => {
+  clearTimeout(esperaGiro);
+  esperaGiro = setTimeout(() => { if (livro && tela().chave !== chaveTela) remontar(); }, 150);
 });
 
 async function carregar() {
