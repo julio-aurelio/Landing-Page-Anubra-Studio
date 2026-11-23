@@ -1,24 +1,10 @@
 // ===== Foto livro: o conteúdo vem do painel admin (GET /api/fotolivro) =====
-const PADRAO = {
-  titulo: 'Anubra Studio', subtitulo: 'Cada olhar conta uma história.', autor: 'Foto Livro', ano: '2026',
-  dedicatoria: 'Para quem acredita que um instante pode durar para sempre.',
-  contracapa_titulo: 'Vamos criar o seu?', contracapa_texto: 'Transformamos os seus momentos em um livro para guardar.',
-  botao_texto: 'Quero meu foto livro', dica: 'Clique nas páginas, use as setas do teclado ou deslize para folhear.', titulo_aba: 'Foto Livro — Anubra Studio',
-  fonte_titulo: 'Syne', fonte_texto: 'Inter',
-  cores: { fundo: '#05070F', capa: '#10288C', capa_texto: '#E3E9FF', pagina: '#FBFAF6', texto: '#1C285A', destaque: '#7C93F1' },
-  paginas: [
-    { layout: 'foto', legenda: 'Sua primeira foto aqui' },
-    { layout: 'foto_texto', titulo: 'O começo', texto: 'Conte aqui a história deste ensaio.' },
-    { layout: 'duas_fotos', legenda: 'Detalhes do dia' },
-    { layout: 'texto', titulo: 'Um momento', texto: 'Escreva uma frase, uma lembrança ou uma dedicatória.' },
-  ],
-};
+const PADRAO = window.LIVRO_PADRAO_SITE;
 const VARIAVEIS = { fundo: '--fundo', capa: '--capa', capa_texto: '--capa-texto', pagina: '--pagina', texto: '--texto', destaque: '--destaque' };
 
 const $ = s => document.querySelector(s);
-const livroEl = $('#livro');
-const celular = matchMedia('(max-width: 760px)');
-let folhas = [], total = 0, face = 0, botaoFinal = null;
+const mesa = $('#mesa');
+let livro = null, total = 0, botaoFinal = null;
 
 function el(tag, classe, texto) {
   const n = document.createElement(tag);
@@ -30,126 +16,101 @@ function el(tag, classe, texto) {
 function foto(url, alt) {
   if (!url) return el('div', 'sem-foto', 'Foto em breve');
   const img = el('img');
-  img.src = url; img.alt = alt || ''; img.loading = 'lazy'; img.draggable = false;
+  img.src = url; img.alt = alt || ''; img.draggable = false;
   return img;
 }
 
+// A biblioteca vira o elemento .pagina; o conteúdo fica dentro de .miolo > .conteudo
+function folha(classe, dura) {
+  const pag = el('div', `pagina ${classe}`);
+  if (dura) pag.dataset.density = 'hard';
+  const miolo = el('div', 'miolo'), conteudo = el('div', 'conteudo');
+  miolo.append(conteudo);
+  pag.append(miolo);
+  return [pag, conteudo];
+}
+
 function capa(d) {
-  const f = el('div', `face capa${d.capa_imagem ? ' com-foto' : ''}`);
-  if (d.capa_imagem) f.append(foto(d.capa_imagem, d.titulo));
-  f.append(el('h2', '', d.titulo));
-  if (d.subtitulo) f.append(el('p', '', d.subtitulo));
+  const [pag, c] = folha(`capa${d.capa_imagem ? ' com-foto' : ''}`, true);
+  if (d.capa_imagem) c.append(foto(d.capa_imagem, d.titulo));
+  c.append(el('h2', '', d.titulo));
+  if (d.subtitulo) c.append(el('p', '', d.subtitulo));
   const autor = [d.autor, d.ano].filter(Boolean).join(' · ');
-  if (autor) f.append(el('p', 'autor', autor));
-  return f;
+  if (autor) c.append(el('p', 'autor', autor));
+  return pag;
 }
 
 function contracapa(d) {
-  const f = el('div', `face capa${d.contracapa_imagem ? ' com-foto' : ''}`);
-  if (d.contracapa_imagem) f.append(foto(d.contracapa_imagem, d.contracapa_titulo));
-  f.append(el('h2', '', d.contracapa_titulo));
-  if (d.contracapa_texto) f.append(el('p', '', d.contracapa_texto));
+  const [pag, c] = folha(`capa${d.contracapa_imagem ? ' com-foto' : ''}`, true);
+  if (d.contracapa_imagem) c.append(foto(d.contracapa_imagem, d.contracapa_titulo));
+  c.append(el('h2', '', d.contracapa_titulo));
+  if (d.contracapa_texto) c.append(el('p', '', d.contracapa_texto));
   if (d.botao_texto) {
     botaoFinal = el('a', 'botao', d.botao_texto);
     botaoFinal.href = '/#contato';
-    f.append(botaoFinal);
+    c.append(botaoFinal);
   }
-  return f;
+  return pag;
 }
 
 function pagina(p, numero) {
-  const so = { foto: ' so-foto', texto: ' so-texto' }[p.layout] || '';
-  const f = el('div', `face${so}`);
-  if (p.fundo) f.style.background = p.fundo;
-  if (p.titulo && p.layout !== 'foto') f.append(el('h3', '', p.titulo));
+  const so = { foto: 'so-foto', texto: 'so-texto' }[p.layout] || '';
+  const [pag, c] = folha(so);
+  if (p.fundo) pag.style.background = p.fundo;
+  if (p.titulo && p.layout !== 'foto') c.append(el('h3', '', p.titulo));
   if (p.layout !== 'texto') {
     const fotos = el('div', `fotos${p.layout === 'duas_fotos' ? ' duas' : ''}`);
     fotos.append(foto(p.foto, p.legenda || p.titulo));
     if (p.layout === 'duas_fotos') fotos.append(foto(p.foto2, p.legenda || p.titulo));
-    f.append(fotos);
+    c.append(fotos);
   }
-  if (p.texto && p.layout !== 'foto' && p.layout !== 'duas_fotos') f.append(el('p', 'corpo', p.texto));
-  if (p.legenda) f.append(el('p', 'legenda', p.legenda));
-  f.append(el('span', 'num', String(numero)));
-  return f;
+  if (p.texto && (p.layout === 'foto_texto' || p.layout === 'texto')) c.append(el('p', 'corpo', p.texto));
+  if (p.legenda) c.append(el('p', 'legenda', p.legenda));
+  c.parentElement.append(el('span', 'num', String(numero)));
+  return pag;
 }
 
 function montar(d) {
-  botaoFinal = null;
-  const dedicatoria = el('div', 'face dedicatoria');
-  if (d.dedicatoria) dedicatoria.append(el('p', 'corpo', d.dedicatoria));
-  const faces = [capa(d), dedicatoria, ...d.paginas.map((p, i) => pagina(p, i + 2))];  // a dedicatória é a página 1
-  if (faces.length % 2 === 0) faces.push(el('div', 'face'));  // a contracapa precisa cair no verso da última folha
-  faces.push(contracapa(d));
-  total = faces.length;
-  folhas = [];
-  for (let i = 0; i < total; i += 2) {
-    const folha = el('div', 'folha');
-    faces[i + 1].classList.add('verso');
-    folha.append(faces[i], faces[i + 1]);
-    folhas.push(folha);
-  }
-  livroEl.replaceChildren(...folhas);
-  livroEl.removeAttribute('aria-busy');
+  const [dedicatoria, cd] = folha('dedicatoria', true);
+  if (d.dedicatoria) cd.append(el('p', 'corpo', d.dedicatoria));
+  const paginas = [capa(d), dedicatoria, ...d.paginas.map((p, i) => pagina(p, i + 2))];  // a dedicatória é a página 1
+  if (paginas.length % 2) paginas.push(folha('')[0]);  // a contracapa precisa cair no verso da última folha
+  paginas.push(folha('guarda', true)[0], contracapa(d));
+  paginas.forEach((p, i) => p.classList.add(i % 2 ? 'esquerda' : 'direita'));
+  total = paginas.length;
+  $('#livro').append(...paginas);
+
+  livro = new St.PageFlip($('#livro'), {
+    width: 550, height: 760, size: 'stretch', minWidth: 260, maxWidth: 1000, minHeight: 360, maxHeight: 1382,
+    showCover: true, usePortrait: true, maxShadowOpacity: .55, mobileScrollSupport: false,
+    flippingTime: 1000,
+  });
+  livro.loadFromHTML(paginas);
+  livro.on('flip', e => mostrar(e.data));
+  livro.on('changeOrientation', () => mostrar(livro.getCurrentPageIndex()));
+  $('#livro').removeAttribute('aria-busy');
+  mostrar(0);
 }
 
-// No computador mostra duas páginas (faces 0, 1, 3, 5...); no celular, uma por vez.
-function mostrar() {
-  const viradas = Math.ceil(face / 2);
-  folhas.forEach((f, i) => {
-    const virada = i < viradas;
-    f.classList.toggle('virada', virada);
-    f.style.zIndex = virada ? i + 1 : folhas.length - i;
-  });
-  const ultima = face === total - 1;
-  const desloca = celular.matches ? (face % 2 ? .5 : -.5) : (face === 0 ? -.5 : ultima ? .5 : 0);
-  livroEl.style.setProperty('--desloca', desloca);
-  $('#anterior').disabled = face === 0;
+function mostrar(i) {
+  const retrato = livro.getOrientation() === 'portrait';
+  const ultima = i >= total - 1;
+  mesa.classList.toggle('retrato', retrato);
+  mesa.classList.toggle('fechado-inicio', !retrato && i === 0);
+  mesa.classList.toggle('fechado-fim', !retrato && ultima);
+  $('#anterior').disabled = i === 0;
   $('#proxima').disabled = ultima;
   if (botaoFinal) botaoFinal.tabIndex = ultima ? 0 : -1;
-  $('#indicador').textContent = face === 0 ? 'Capa' : ultima ? 'Contracapa'
-    : celular.matches ? `Página ${face} de ${total - 2}` : `Páginas ${face}–${Math.min(face + 1, total - 2)} de ${total - 2}`;
+  const esquerda = i % 2 ? i : i - 1;
+  $('#indicador').textContent = i === 0 ? 'Capa' : ultima ? 'Contracapa'
+    : retrato ? `Página ${i} de ${total - 2}` : `Páginas ${esquerda}–${esquerda + 1} de ${total - 2}`;
 }
 
-function proxima() {
-  if (face >= total - 1) return;
-  face = celular.matches || face === 0 ? face + 1 : face + 2;
-  mostrar();
-}
-
-function anterior() {
-  if (face <= 0) return;
-  face = celular.matches ? face - 1 : Math.max(face - 2, 0);
-  mostrar();
-}
-
-$('#proxima').addEventListener('click', proxima);
-$('#anterior').addEventListener('click', anterior);
-livroEl.addEventListener('click', e => {
-  if (e.target.closest('a')) return;
-  if (face === 0) proxima();
-  else if (face === total - 1) anterior();
-  else if (e.clientX < innerWidth / 2) anterior();
-  else proxima();
-});
+$('#proxima').addEventListener('click', () => livro?.flipNext());
+$('#anterior').addEventListener('click', () => livro?.flipPrev());
 addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight') proxima();
-  if (e.key === 'ArrowLeft') anterior();
-});
-
-let toqueX = null;
-livroEl.addEventListener('touchstart', e => { toqueX = e.touches[0].clientX; }, { passive: true });
-livroEl.addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - toqueX;
-  if (Math.abs(dx) < 40) return;
-  e.preventDefault();  // o deslize não vira um clique
-  dx < 0 ? proxima() : anterior();
-});
-
-// Ao girar a tela, o computador só aceita faces ímpares (início de uma página dupla)
-celular.addEventListener('change', () => {
-  if (!celular.matches && face > 0 && face % 2 === 0) face -= 1;
-  mostrar();
+  if (e.key === 'ArrowRight') livro?.flipNext();
+  if (e.key === 'ArrowLeft') livro?.flipPrev();
 });
 
 async function carregar() {
@@ -167,6 +128,6 @@ carregar().then(salvo => {
   raiz.setProperty('--fonte-texto', `'${d.fonte_texto}', sans-serif`);
   document.title = d.titulo_aba || d.titulo;
   $('#dica').textContent = d.dica;
+  if (!window.St) { $('#indicador').textContent = 'Não foi possível abrir o livro. Recarregue a página.'; return; }
   montar(d);
-  mostrar();
 });

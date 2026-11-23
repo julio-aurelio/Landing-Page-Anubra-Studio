@@ -30,6 +30,7 @@ Este projeto corresponde à **Tarefa 1** do quadro Scrum.
 | ✅ | Formulário de contato | `#contato` |
 | ✅ | Contatos do cliente | `#contato` (WhatsApp, Instagram, e-mail) |
 | ✅ | Créditos e contato da agência | Rodapé |
+| ✅ | Foto livro virtual | `/fotolivro` |
 
 ## 🛠️ Tecnologias
 
@@ -41,6 +42,7 @@ Este projeto corresponde à **Tarefa 1** do quadro Scrum.
 | **JavaScript** | Tema, menu mobile, formulário e animações |
 | **GSAP + ScrollTrigger** | Animações de entrada, parallax, contadores e marquee |
 | **Lenis** | Rolagem suave |
+| **StPageFlip** (`page-flip`) | Virada de página realista do foto livro |
 | **Lucide Icons** | Ícones em SVG editáveis com as cores da marca |
 | **Python + Flask** | Back-end (API) que conversa com o banco |
 | **Supabase** | Banco de dados (PostgreSQL) e armazenamento das imagens |
@@ -66,13 +68,25 @@ Este projeto corresponde à **Tarefa 1** do quadro Scrum.
 - 🛠️ **Editável pelo painel admin** — cores, textos, contatos, imagens e listas
 - ♿ **Acessibilidade** — `aria-label` nos botões e respeito ao `prefers-reduced-motion`
 
+## 📖 Foto livro
+
+Álbum virtual em **`/fotolivro`**, com capa dura, 28 páginas e virada de página com curvatura.
+
+- **Como folhear:** arrastando o canto da página, clicando, pelos botões, pelas setas do teclado ou deslizando no celular
+- **Computador e celular:** mostra páginas duplas no computador e uma página por vez no celular
+- **Editável pelo painel admin:** cores, fontes, capa, textos, fotos e páginas
+- **Onde fica salvo:** em `site_config`, na linha `landing`, dentro da chave `fotolivro`
+- **Conteúdo inicial:** `fotolivro/padrao.js`, usado enquanto nada foi salvo no painel
+
+> As fotos em `assets/fotolivro/` são ilustrativas, da [Unsplash](https://unsplash.com/license). Troque pelas fotos do estúdio no painel antes de divulgar como trabalho da Anubra.
+
 ## 🚀 Como rodar no PC
 
 ```bash
 pip install flask
 python api/index.py
 ```
-Abre em **http://localhost:5001**. Antes, crie o arquivo `.env` nesta pasta a partir do `.env.example` (URL e chave do Supabase).
+Abre em **http://localhost:5001** (foto livro em **/fotolivro**). Antes, crie o arquivo `.env` nesta pasta a partir do `.env.example` (URL e chave do Supabase).
 
 > O conteúdo (textos, cores, imagens, listas) vem do **Supabase** e é editado no painel admin (outro projeto).
 > Se a API estiver fora do ar, o site continua funcionando com o conteúdo padrão escrito no HTML.
@@ -93,6 +107,7 @@ A Vercel publica o HTML e transforma `api/index.py` numa função Python automat
 | Método | Rota | O que faz |
 |---|---|---|
 | `GET` | `/api/config` | textos, cores, contatos e imagens |
+| `GET` | `/api/fotolivro` | conteúdo do foto livro |
 | `GET` | `/api/itens` | listas do site |
 | `POST` | `/api/contato` | salva a mensagem do formulário |
 
@@ -101,7 +116,8 @@ A Vercel publica o HTML e transforma `api/index.py` numa função Python automat
 ```
 landing-page-ANA/
 ├── index.html          # Página (elementos editáveis marcados com data-e / data-lista)
-├── assets/             # logo, banner, style.css (cores em variáveis) e main.js
+├── assets/             # logo, banner, style.css (cores em variáveis), main.js e fotos do livro
+├── fotolivro/          # Foto livro: index.html, livro.css, livro.js e padrao.js
 ├── api/index.py        # API em Python (Flask) → função serverless na Vercel
 ├── requirements.txt    # dependências Python (flask)
 ├── .env.example        # modelo das variáveis (o .env real nunca vai pro Git)
@@ -113,6 +129,7 @@ landing-page-ANA/
 
 - [ ] Substituir os placeholders pelas fotos reais dos ensaios
 - [ ] Definir os preços dos pacotes
+- [ ] Trocar as fotos ilustrativas do foto livro pelas fotos do estúdio
 
 ---
 
