@@ -11,7 +11,8 @@ enviados = []
 
 def falso_supabase(metodo, caminho, corpo=None):
     enviados.append(corpo)
-    return [{"dados": {"nome": "Teste", "fotolivro": {"titulo": "Livro"}}}] if "site_config" in caminho else []
+    dados = {"nome": "Teste", "fotolivro": {"titulo": "Livro"}, "fotolivro_rascunho": {"titulo": "Secreto"}}
+    return [{"dados": dados}] if "site_config" in caminho else []
 
 
 api.supabase = falso_supabase

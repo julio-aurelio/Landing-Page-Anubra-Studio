@@ -78,6 +78,7 @@ def config():
     linhas = supabase("GET", f"/rest/v1/site_config?site=eq.{SITE}&select=dados")
     dados = linhas[0]["dados"] if linhas else {}
     dados.pop("fotolivro", None)  # o livro tem a própria rota
+    dados.pop("fotolivro_rascunho", None)  # o rascunho nunca sai para o público
     return jsonify(dados)
 
 

@@ -74,8 +74,9 @@ Este projeto corresponde à **Tarefa 1** do quadro Scrum.
 
 - **Como folhear:** arrastando o canto da página, clicando, pelos botões, pelas setas do teclado ou deslizando no celular
 - **Computador e celular:** mostra páginas duplas no computador e uma página por vez no celular
-- **Editável pelo painel admin:** cores, fontes, capa, textos, fotos e páginas
-- **Onde fica salvo:** em `site_config`, na linha `landing`, dentro da chave `fotolivro`
+- **Editor visual no painel admin:** cada página é montada livremente com fotos, textos e formas
+- **Formato fixo:** posições em % da página e fontes em `cqw`, para sair igual em qualquer tela
+- **Onde fica salvo:** em `site_config`, na linha `landing`: `fotolivro` é o publicado e `fotolivro_rascunho` nunca sai na API pública
 - **Conteúdo inicial:** `fotolivro/padrao.js`, usado enquanto nada foi salvo no painel
 
 > As fotos em `assets/fotolivro/` são ilustrativas, da [Unsplash](https://unsplash.com/license). Troque pelas fotos do estúdio no painel antes de divulgar como trabalho da Anubra.
@@ -117,7 +118,7 @@ A Vercel publica o HTML e transforma `api/index.py` numa função Python automat
 landing-page-ANA/
 ├── index.html          # Página (elementos editáveis marcados com data-e / data-lista)
 ├── assets/             # logo, banner, style.css (cores em variáveis), main.js e fotos do livro
-├── fotolivro/          # Foto livro: index.html, livro.css, livro.js e padrao.js
+├── fotolivro/          # Foto livro: index.html, livro.css, livro.js, render.js (páginas livres) e padrao.js
 ├── api/index.py        # API em Python (Flask) → função serverless na Vercel
 ├── requirements.txt    # dependências Python (flask)
 ├── .env.example        # modelo das variáveis (o .env real nunca vai pro Git)

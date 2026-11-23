@@ -11,12 +11,13 @@ let livro = null, dados = null, total = 0, botaoFinal = null, capaDura = true, c
 function tela() {
   const w = innerWidth, h = document.documentElement.clientHeight;
   if (w > 600 && !(toque.matches && h <= 500)) return { modo: 'pc', chave: 'pc' };
+  const P = LivroRender.PROPORCAO;  // formato fixo: o que foi montado no editor sai igual em toda tela
   if (w < h) {
-    const pw = w - 16;
-    return { modo: 'retrato', chave: `retrato:${w}`, pw, ph: Math.min(h - 104, Math.round(pw * 1.62)), mesa: pw };
+    const pw = Math.min(w - 16, Math.floor((h - 104) * P));
+    return { modo: 'retrato', chave: `retrato:${w}`, pw, ph: Math.round(pw / P), mesa: pw };
   }
-  const pw = Math.min(Math.round((h - 16) * .72), Math.floor((w - 120) / 2));
-  return { modo: 'deitado', chave: `deitado:${w}`, pw, ph: Math.round(pw / .72), mesa: pw * 2 };
+  const pw = Math.min(Math.round((h - 16) * P), Math.floor((w - 120) / 2));
+  return { modo: 'deitado', chave: `deitado:${w}`, pw, ph: Math.round(pw / P), mesa: pw * 2 };
 }
 
 function el(tag, classe, texto) {
@@ -80,6 +81,13 @@ function pagina(p, numero) {
   if (p.texto && (p.layout === 'foto_texto' || p.layout === 'texto')) c.append(el('p', 'corpo', p.texto));
   if (p.legenda) c.append(el('p', 'legenda', p.legenda));
   c.parentElement.append(el('span', 'num', String(numero)));
+  return pag;
+}
+
+function paginaLivre(paginas, i) {
+  const [pag, c] = folha('livre');
+  if (paginas[i].fundo) pag.style.background = paginas[i].fundo;
+  LivroRender.montar(c, paginas, i);
   return pag;
 }
 
@@ -196,7 +204,7 @@ function montar(d, inicio = 0) {
   mesa.style.width = t.mesa ? `${t.mesa}px` : '';
   const [dedicatoria, cd] = folha('dedicatoria', true);
   if (d.dedicatoria) cd.append(el('p', 'corpo', d.dedicatoria));
-  const paginas = [capa(d), dedicatoria, ...d.paginas.map((p, i) => pagina(p, i + 2))];  // a dedicatória é a página 1
+  const paginas = [capa(d), dedicatoria, ...d.paginas.map((p, i) => p.layout === 'livre' ? paginaLivre(d.paginas, i) : pagina(p, i + 2))];  // a dedicatória é a página 1
   if (paginas.length % 2) paginas.push(folha('')[0]);  // a contracapa precisa cair no verso da última folha
   paginas.push(folha('guarda', true)[0], contracapa(d));
   paginas.forEach((p, i) => p.classList.add(i % 2 && t.modo !== 'retrato' ? 'esquerda' : 'direita'));
