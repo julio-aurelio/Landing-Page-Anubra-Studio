@@ -11,13 +11,15 @@ enviados = []
 
 def falso_supabase(metodo, caminho, corpo=None):
     enviados.append(corpo)
-    return [{"dados": {"nome": "Teste"}}] if "site_config" in caminho else []
+    return [{"dados": {"nome": "Teste", "fotolivro": {"titulo": "Livro"}}}] if "site_config" in caminho else []
 
 
 api.supabase = falso_supabase
 c = api.app.test_client()
 
 assert c.get("/api/config").json == {"nome": "Teste"}
+assert c.get("/api/fotolivro").json == {"titulo": "Livro"}
+assert c.get("/fotolivro").status_code == 200 and c.get("/fotolivro/livro.js").status_code == 200
 assert c.get("/api/itens").status_code == 200
 assert c.post("/api/contato", json={"nome": "Ana", "email": "a@b.com", "origem": "outro"}).status_code == 201
 assert enviados[-1]["origem"] == api.SITE  # a origem é definida pelo servidor

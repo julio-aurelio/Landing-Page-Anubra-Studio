@@ -2,6 +2,7 @@
 
 Rotas:
     GET  /api/config   -> textos, cores, contatos e imagens (editados no painel admin)
+    GET  /api/fotolivro -> conteúdo do foto livro
     GET  /api/itens    -> listas (produtos, serviços, equipe...)
     POST /api/contato  -> salva a mensagem do formulário
 
@@ -75,7 +76,15 @@ def texto(valor, limite):
 @app.get("/api/config")
 def config():
     linhas = supabase("GET", f"/rest/v1/site_config?site=eq.{SITE}&select=dados")
-    return jsonify(linhas[0]["dados"] if linhas else {})
+    dados = linhas[0]["dados"] if linhas else {}
+    dados.pop("fotolivro", None)  # o livro tem a própria rota
+    return jsonify(dados)
+
+
+@app.get("/api/fotolivro")
+def fotolivro_dados():
+    linhas = supabase("GET", f"/rest/v1/site_config?site=eq.{SITE}&select=dados")
+    return jsonify((linhas[0]["dados"].get("fotolivro") if linhas else None) or {})
 
 
 @app.get("/api/itens")
@@ -104,10 +113,16 @@ def contato():
 
 
 # ---------- Só para rodar no PC (na Vercel os arquivos são servidos por ela) ----------
+@app.get("/fotolivro")
+@app.get("/fotolivro/")
+def pagina_fotolivro():
+    return send_from_directory(RAIZ / "fotolivro", "index.html")
+
+
 @app.get("/")
 @app.get("/<path:arquivo>")
 def pagina(arquivo="index.html"):
-    if arquivo != "index.html" and not arquivo.startswith("assets/"):
+    if arquivo != "index.html" and not arquivo.startswith(("assets/", "fotolivro/")):
         abort(404)  # nunca entrega api/, .env etc.
     return send_from_directory(RAIZ, arquivo)
 

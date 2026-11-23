@@ -1,0 +1,73 @@
+/* As cores e fontes vêm do painel admin (livro.js troca essas variáveis) */
+:root {
+  --fundo: #05070F; --capa: #10288C; --capa-texto: #E3E9FF;
+  --pagina: #FBFAF6; --texto: #1C285A; --destaque: #7C93F1;
+  --fonte-titulo: 'Syne', sans-serif; --fonte-texto: 'Inter', sans-serif;
+  --p: min(44vw, calc((100dvh - 150px) * .72));  /* largura de uma página */
+  --desloca: -.5;
+}
+@media (max-width: 760px) { :root { --p: min(86vw, calc((100dvh - 150px) * .72)); } }
+
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body { background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--capa) 35%, var(--fundo)), var(--fundo) 70%);
+  color: var(--capa-texto); font-family: var(--fonte-texto); overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.voltar { align-self: flex-start; padding: 16px; color: inherit; font-size: 14px; text-decoration: none; opacity: .75; }
+.voltar:hover { opacity: 1; }
+
+/* ===== Livro em 3D ===== */
+.palco { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; perspective: 2200px; overflow: hidden; }
+.livro { position: relative; flex: none; width: calc(var(--p) * 2); height: calc(var(--p) / .72); cursor: pointer;
+  transform: translateX(calc(var(--p) * var(--desloca))); transform-style: preserve-3d; transition: transform .7s cubic-bezier(.3,.7,.2,1); }
+.folha { position: absolute; left: 50%; top: 0; width: 50%; height: 100%; transform-origin: left center; transform-style: preserve-3d;
+  transition: transform .9s cubic-bezier(.45,.05,.25,1), z-index 0s linear .45s; }
+.folha.virada { transform: rotateY(-180deg); }
+.face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: var(--pagina); color: var(--texto); display: flex; flex-direction: column; padding: 7%; gap: 3%;
+  box-shadow: 0 18px 40px rgb(0 0 0 / .45); border-radius: 2px 6px 6px 2px; }
+.face.verso { transform: rotateY(180deg); border-radius: 6px 2px 2px 6px; }
+/* sombra da dobra, perto da lombada */
+.face::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgb(0 0 0 / .2), transparent 9%); }
+.face.verso::after { background: linear-gradient(270deg, rgb(0 0 0 / .2), transparent 9%); }
+
+/* ===== Capa e contracapa ===== */
+.face.capa { background: var(--capa); color: var(--capa-texto); justify-content: flex-end; padding: 9%; }
+.face.capa img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.face.capa.com-foto::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgb(0 0 0 / .75), transparent 65%); }
+.face.capa > :not(img) { position: relative; z-index: 2; }
+.capa h2 { font-family: var(--fonte-titulo); font-size: calc(var(--p) * .115); line-height: 1; overflow-wrap: anywhere; }
+.capa p { font-size: calc(var(--p) * .036); line-height: 1.4; }
+.capa .autor { margin-top: 4%; letter-spacing: .14em; text-transform: uppercase; font-size: calc(var(--p) * .026); opacity: .85; }
+.botao { align-self: flex-start; margin-top: 5%; padding: .7em 1.4em; border-radius: 99px; background: var(--destaque); color: #fff;
+  font-weight: 600; font-size: calc(var(--p) * .032); text-decoration: none; }
+
+/* ===== Páginas ===== */
+.face h3 { font-family: var(--fonte-titulo); font-size: calc(var(--p) * .062); line-height: 1.1; color: var(--texto); overflow-wrap: anywhere; }
+.face .corpo { font-size: calc(var(--p) * .032); line-height: 1.55; white-space: pre-wrap; overflow: hidden; }
+.face .legenda { font-size: calc(var(--p) * .025); font-style: italic; opacity: .7; }
+.face .num { position: absolute; bottom: 2.2%; right: 6%; font-size: calc(var(--p) * .022); opacity: .55; }
+.face.verso .num { right: auto; left: 6%; }
+.fotos { flex: 1; min-height: 0; display: grid; gap: 8px; }
+.fotos.duas { grid-template-rows: 1fr 1fr; }
+.fotos img, .sem-foto { width: 100%; height: 100%; min-height: 0; object-fit: cover; display: block; border-radius: 2px; }
+.sem-foto { display: grid; place-items: center; font-size: calc(var(--p) * .03); color: var(--destaque);
+  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--destaque) 16%, transparent) 0 10px, transparent 10px 20px); }
+.face.so-foto { padding: 0; }
+.face.so-foto .fotos img, .face.so-foto .sem-foto { border-radius: 0; }
+.face.so-foto .legenda { position: absolute; left: 0; right: 0; bottom: 0; padding: 8% 6% 4%; color: #fff; opacity: 1; background: linear-gradient(to top, rgb(0 0 0 / .65), transparent); }
+.face.so-foto .num { display: none; }
+.face.so-texto, .face.dedicatoria { justify-content: center; text-align: center; }
+.face.dedicatoria .corpo { font-family: var(--fonte-titulo); font-size: calc(var(--p) * .042); }
+
+/* ===== Controles ===== */
+.controles { display: flex; align-items: center; gap: 16px; padding-top: 10px; }
+.controles button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--capa-texto) 35%, transparent);
+  background: transparent; color: inherit; font-size: 18px; cursor: pointer; }
+.controles button:hover:not(:disabled) { background: var(--destaque); color: #fff; }
+.controles button:disabled { opacity: .3; cursor: default; }
+:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+#indicador { min-width: 120px; text-align: center; font-size: 14px; }
+.dica { padding: 6px 16px 12px; font-size: 12px; opacity: .6; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) { .livro, .folha { transition: none; } }

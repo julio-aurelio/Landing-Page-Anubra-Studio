@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foto Livro — Anubra Studio</title>
+  <meta name="description" content="Folheie o foto livro do Anubra Studio." />
+  <link rel="icon" href="/assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Dancing+Script:wght@600&family=Inter:wght@300;400;600&family=Montserrat:wght@400;700&family=Playfair+Display:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/fotolivro/livro.css" />
+</head>
+<body>
+  <a class="voltar" href="/">← Voltar ao site</a>
+
+  <main class="palco">
+    <h1 class="so-leitor">Foto livro</h1>
+    <div id="livro" class="livro" aria-busy="true"></div>
+  </main>
+
+  <nav class="controles" aria-label="Navegação do livro">
+    <button id="anterior" aria-label="Página anterior">←</button>
+    <span id="indicador" aria-live="polite"></span>
+    <button id="proxima" aria-label="Próxima página">→</button>
+  </nav>
+  <p id="dica" class="dica"></p>
+
+  <script src="/fotolivro/livro.js"></script>
+</body>
+</html>
