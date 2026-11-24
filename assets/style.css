@@ -45,4 +45,13 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: rgb(var
 .livro3d:hover .livro3d-paginas { transform: rotateY(-16deg) rotateX(2deg) translate(12px, 6px); }
 @keyframes flutuar { 50% { translate: 0 -14px; } }
 
+/* barra de rolagem com as cores da marca (o painel troca as cores) */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: rgb(var(--ice)); }
+html.dark::-webkit-scrollbar-track, .dark ::-webkit-scrollbar-track { background: #05070f; }
+::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 99px; background: linear-gradient(rgb(var(--periwinkle)), rgb(var(--royal))) padding-box; }
+::-webkit-scrollbar-thumb:hover { border-width: 2px; background: linear-gradient(rgb(var(--mist)), rgb(var(--periwinkle))) padding-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+@supports not selector(::-webkit-scrollbar) { html { scrollbar-color: rgb(var(--periwinkle)) transparent; scrollbar-width: thin; } }
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

@@ -44,8 +44,15 @@ function folha(classe, dura) {
   return [pag, conteudo];
 }
 
+// Modelo e alinhamento escolhidos no painel para a capa e a contracapa
+const MODELOS_CAPA = ['fundo', 'moldura', 'texto'];
+const estiloCapa = (modelo, foto, d) => {
+  const m = MODELOS_CAPA.includes(modelo) ? modelo : 'fundo';
+  return `capa modelo-${m}${foto && m !== 'texto' ? ' com-foto' : ''}${d.capa_alinhar === 'centro' ? ' alinhar-centro' : ''}`;
+};
+
 function capa(d) {
-  const [pag, c] = folha(`capa${d.capa_imagem ? ' com-foto' : ''}`, true);
+  const [pag, c] = folha(estiloCapa(d.capa_modelo, d.capa_imagem, d), true);
   if (d.capa_imagem) c.append(foto(d.capa_imagem, d.titulo));
   c.append(el('h2', '', d.titulo));
   if (d.subtitulo) c.append(el('p', '', d.subtitulo));
@@ -55,7 +62,7 @@ function capa(d) {
 }
 
 function contracapa(d) {
-  const [pag, c] = folha(`capa${d.contracapa_imagem ? ' com-foto' : ''}`, true);
+  const [pag, c] = folha(estiloCapa(d.contracapa_modelo, d.contracapa_imagem, d), true);
   if (d.contracapa_imagem) c.append(foto(d.contracapa_imagem, d.contracapa_titulo));
   c.append(el('h2', '', d.contracapa_titulo));
   if (d.contracapa_texto) c.append(el('p', '', d.contracapa_texto));
@@ -199,7 +206,7 @@ function criarFolheador(raiz, paginas, inicio, aoVirar, altura) {
 
 function montar(d, inicio = 0) {
   const t = tela();
-  dados = d; botaoFinal = null; chaveTela = t.chave; capaDura = t.modo !== 'retrato';
+  dados = d; botaoFinal = null; chaveTela = t.chave; capaDura = t.modo !== 'retrato' && d.capa_tipo !== 'flexivel';
   document.body.dataset.modo = t.modo;
   mesa.style.width = t.mesa ? `${t.mesa}px` : '';
   const [dedicatoria, cd] = folha('dedicatoria', true);
@@ -218,8 +225,9 @@ function montar(d, inicio = 0) {
     return;
   }
 
+  const P = LivroRender.PROPORCAO;
   const tamanho = t.modo === 'pc'
-    ? { width: 550, height: 760, minWidth: 260, maxWidth: 1000, minHeight: 360, maxHeight: 1382, usePortrait: true }
+    ? { width: 550, height: Math.round(550 / P), minWidth: 260, maxWidth: 1000, minHeight: Math.round(260 / P), maxHeight: Math.round(1000 / P), usePortrait: true }
     : { width: t.pw, height: t.ph, minWidth: t.pw, maxWidth: t.pw, minHeight: t.ph, maxHeight: t.ph, usePortrait: t.modo === 'retrato' };
   livro = new St.PageFlip($('#livro'), {
     ...tamanho, size: 'stretch', startPage: inicio,
@@ -359,6 +367,9 @@ carregar().then(salvo => {
   const d = Object.keys(salvo).length ? { ...PADRAO, ...salvo, cores: { ...PADRAO.cores, ...salvo.cores } } : PADRAO;
   const raiz = document.documentElement.style;
   for (const [chave, variavel] of Object.entries(VARIAVEIS)) raiz.setProperty(variavel, d.cores[chave]);
+  raiz.setProperty('--prop', LivroRender.definirFormato(d.formato));
+  raiz.setProperty('--escala', { pequeno: .72, medio: .86 }[d.tamanho] || 1);
+  document.body.classList.toggle('capa-flexivel', d.capa_tipo === 'flexivel');
   raiz.setProperty('--fonte-titulo', `'${d.fonte_titulo}', sans-serif`);
   raiz.setProperty('--fonte-texto', `'${d.fonte_texto}', sans-serif`);
   document.title = d.titulo_aba || d.titulo;

@@ -1,7 +1,15 @@
 // ===== Páginas livres do foto livro (usado pelo livro e pelo editor do painel) =====
 // Posição e tamanho ficam em % da página e a fonte em cqw, então a página sai igual em qualquer tela.
 window.LivroRender = (() => {
-  const PROPORCAO = 550 / 760;
+  // Formato das folhas (largura / altura). Tudo é em % da página, então trocar o formato não perde nada.
+  const FORMATOS = {
+    retrato: ['Retrato (padrão)', 550 / 760],
+    a4: ['Alto, tipo A4', 1 / 1.414],
+    quadrado: ['Quadrado', 1],
+    paisagem: ['Paisagem (deitado)', 4 / 3],
+  };
+  let proporcao = FORMATOS.retrato[1];
+  const definirFormato = nome => { proporcao = (FORMATOS[nome] || FORMATOS.retrato)[1]; return proporcao; };
   const FONTES = ['Syne', 'Inter', 'Playfair Display', 'Cormorant Garamond', 'Montserrat', 'Dancing Script',
     'Abril Fatface', 'Bebas Neue', 'Caveat', 'Lora', 'Oswald', 'Raleway'];
   const novoId = () => Math.random().toString(36).slice(2, 12);
@@ -54,7 +62,7 @@ window.LivroRender = (() => {
   // Meia largura real (em % da página) contando a rotação, para saber se o elemento passa da dobra
   function meiaLargura(e) {
     const r = (e.r || 0) * Math.PI / 180;
-    return e.w / 2 * Math.abs(Math.cos(r)) + e.h / PROPORCAO / 2 * Math.abs(Math.sin(r));
+    return e.w / 2 * Math.abs(Math.cos(r)) + e.h / proporcao / 2 * Math.abs(Math.sin(r));
   }
 
   // Página ímpar da lista fica à esquerda; o que atravessa a dobra aparece também na vizinha
@@ -117,5 +125,5 @@ window.LivroRender = (() => {
   };
   const modelo = nome => ({ layout: 'livre', fundo: '', elementos: MODELOS[nome][1]() });
 
-  return { PROPORCAO, FONTES, MODELOS, novoId, posicionar, enquadrar, elemento, montar, converter, modelo };
+  return { get PROPORCAO() { return proporcao; }, FORMATOS, definirFormato, FONTES, MODELOS, novoId, posicionar, enquadrar, elemento, montar, converter, modelo };
 })();
