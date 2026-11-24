@@ -367,7 +367,7 @@ carregar().then(salvo => {
   const d = Object.keys(salvo).length ? { ...PADRAO, ...salvo, cores: { ...PADRAO.cores, ...salvo.cores } } : PADRAO;
   const raiz = document.documentElement.style;
   for (const [chave, variavel] of Object.entries(VARIAVEIS)) raiz.setProperty(variavel, d.cores[chave]);
-  raiz.setProperty('--prop', LivroRender.definirFormato(d.formato));
+  raiz.setProperty('--prop', LivroRender.definirFormato(d.formato, d.medida_largura, d.medida_altura));
   raiz.setProperty('--escala', { pequeno: .72, medio: .86 }[d.tamanho] || 1);
   document.body.classList.toggle('capa-flexivel', d.capa_tipo === 'flexivel');
   raiz.setProperty('--fonte-titulo', `'${d.fonte_titulo}', sans-serif`);

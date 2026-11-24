@@ -2,14 +2,26 @@
 // Posição e tamanho ficam em % da página e a fonte em cqw, então a página sai igual em qualquer tela.
 window.LivroRender = (() => {
   // Formato das folhas (largura / altura). Tudo é em % da página, então trocar o formato não perde nada.
+  // [nome, largura / altura, medida de exemplo]; "personalizado" usa a medida digitada no painel
   const FORMATOS = {
-    retrato: ['Retrato (padrão)', 550 / 760],
-    a4: ['Alto, tipo A4', 1 / 1.414],
-    quadrado: ['Quadrado', 1],
-    paisagem: ['Paisagem (deitado)', 4 / 3],
+    retrato: ['Retrato (padrão)', 550 / 760, '22 × 30 cm'],
+    a4: ['A4 / A5 em pé', 1 / 1.414, '21 × 29,7 cm'],
+    r34: ['Clássico em pé', 3 / 4, '15 × 20 cm'],
+    r23: ['Foto em pé', 2 / 3, '20 × 30 cm'],
+    quadrado: ['Quadrado', 1, '20 × 20 cm'],
+    paisagem: ['Paisagem', 4 / 3, '20 × 15 cm'],
+    p32: ['Foto deitada', 3 / 2, '30 × 20 cm'],
+    a4_deitado: ['A4 deitado', 1.414, '29,7 × 21 cm'],
+    panoramico: ['Panorâmico', 16 / 9, '32 × 18 cm'],
   };
   let proporcao = FORMATOS.retrato[1];
-  const definirFormato = nome => { proporcao = (FORMATOS[nome] || FORMATOS.retrato)[1]; return proporcao; };
+  const definirFormato = (nome, largura, altura) => {
+    const w = +largura, h = +altura;
+    proporcao = nome === 'personalizado' && w > 0 && h > 0
+      ? Math.min(2.5, Math.max(.4, w / h))  // limita para o livro não virar uma tira
+      : (FORMATOS[nome] || FORMATOS.retrato)[1];
+    return proporcao;
+  };
   const FONTES = ['Syne', 'Inter', 'Playfair Display', 'Cormorant Garamond', 'Montserrat', 'Dancing Script',
     'Abril Fatface', 'Bebas Neue', 'Caveat', 'Lora', 'Oswald', 'Raleway'];
   const novoId = () => Math.random().toString(36).slice(2, 12);
