@@ -27,7 +27,7 @@ document.querySelectorAll('[data-year]').forEach(el => el.textContent = new Date
 // Se o back-end estiver desligado, o site mostra o conteúdo que já está no HTML.
 async function getJSON(url) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 2500);
+  const t = setTimeout(() => ctrl.abort(), 8000);
   try { const r = await fetch(url, { signal: ctrl.signal }); return r.ok ? await r.json() : null; }
   catch { return null; } finally { clearTimeout(t); }
 }
@@ -44,13 +44,20 @@ const LINKS = {
 function aplicarConfig(c) {
   for (const [nome, hex] of Object.entries(c.cores || {}))
     if (/^#[0-9a-f]{6}$/i.test(hex)) root.style.setProperty(`--${nome}`, hexParaRgb(hex));
-  document.querySelectorAll('[data-e]').forEach(el => { const v = c[el.dataset.e]; if (v) el.textContent = v; });
+  document.querySelectorAll('[data-e]').forEach(el => { const v = c[el.dataset.e]; if (v) { el.textContent = v; el.hidden = false; } });
   document.querySelectorAll('[data-e-src]').forEach(el => { const v = c[el.dataset.eSrc]; if (v) el.src = v; });
   document.querySelectorAll('[data-e-href]').forEach(el => { const v = c[el.dataset.eHref]; if (v) el.href = v; });
   document.querySelectorAll('[data-e-count]').forEach(el => { const v = c[el.dataset.eCount]; if (v) el.dataset.count = v; });
   document.querySelectorAll('[data-link]').forEach(el => { const v = c[el.dataset.link]; if (v) el.href = LINKS[el.dataset.link](v); });
   if (c.nome) document.title = c.titulo_aba || c.nome;
 }
+
+// O painel guarda a posição escolhida no fim do link da imagem: "...jpg#pos=50,30" (x%, y%)
+const urlImagem = url => (url || '').split('#pos=')[0];
+const posicaoImagem = url => {
+  const [x, y] = ((url || '').split('#pos=')[1] || '').split(',').map(n => Math.min(100, Math.max(0, parseFloat(n))));
+  return `${isNaN(x) ? 50 : x}% ${isNaN(y) ? 50 : y}%`;
+};
 
 function renderLista(box, itens) {
   const tpl = box.querySelector('template');
@@ -64,7 +71,8 @@ function renderLista(box, itens) {
     el.querySelectorAll('[data-i-img]').forEach(n => {
       if (!item.imagem_url) return;
       const img = document.createElement('img');
-      img.src = item.imagem_url; img.alt = item.titulo || ''; img.className = n.dataset.iImg;
+      img.src = urlImagem(item.imagem_url); img.alt = item.titulo || ''; img.className = n.dataset.iImg;
+      img.loading = 'lazy'; img.style.objectPosition = posicaoImagem(item.imagem_url);
       n.replaceWith(img);
     });
     box.appendChild(el);
@@ -131,4 +139,10 @@ document.querySelectorAll('form[data-contato]').forEach(form => form.addEventLis
   } catch {
     status.textContent = 'Não foi possível enviar agora. Tente pelo WhatsApp.';
   }
+}));
+
+// Botões "Quero o meu" já deixam o assunto certo no formulário
+document.querySelectorAll('[data-assunto]').forEach(a => a.addEventListener('click', () => {
+  const select = document.querySelector('form[data-contato] select[name="assunto"]');
+  if (select) select.value = a.dataset.assunto;
 }));

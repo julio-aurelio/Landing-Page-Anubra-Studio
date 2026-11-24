@@ -5,18 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Anubra Studio — Ensaios Fotográficos</title>
   <meta name="description" content="Anubra Studio — ensaios fotográficos autênticos, modernos e cheios de personalidade." />
-  <link rel="icon" href="assets/logo.png" />
+  <link rel="icon" href="assets/logo.webp" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    // As cores vêm das variáveis CSS (style.css) para o painel admin poder trocar
-    const cor = v => `rgb(var(--${v}) / <alpha-value>)`;
-    tailwind.config = { darkMode: 'class', theme: { extend: { colors: {
-      royal: cor('royal'), navy: cor('navy'), periwinkle: cor('periwinkle'), mist: cor('mist'), ice: cor('ice')
-    } } } };
-  </script>
+  <!-- Tailwind já compilado (tailwind.config.js); antes era o CDN, que montava o CSS no navegador a cada visita -->
+  <link rel="stylesheet" href="assets/tailwind.css" />
   <link rel="stylesheet" href="assets/style.css" />
+  <script>if (localStorage.getItem('tema') === 'light') document.documentElement.classList.remove('dark');</script>
 </head>
 <body class="bg-ice text-navy dark:bg-black dark:text-ice overflow-x-hidden">
   <div data-glow></div>
@@ -25,13 +20,13 @@
   <header class="fixed inset-x-0 top-0 z-50">
     <nav class="max-w-7xl mx-auto flex items-center justify-between px-5 py-4">
       <a href="#inicio" class="flex items-center gap-3">
-        <img data-e-src="logo" src="assets/logo.png" alt="Logo" class="h-10 w-10 rounded-xl bg-white p-1 object-contain" />
+        <img data-e-src="logo" src="assets/logo.webp" alt="Logo" class="h-10 w-10 rounded-xl bg-white p-1 object-contain" />
         <span data-e="nome" class="font-display font-bold text-xl tracking-wide">Anubra Studio</span>
       </a>
       <ul class="hidden md:flex gap-8 text-sm font-medium">
         <li><a href="#sobre" class="hover:text-periwinkle transition">Sobre</a></li>
         <li><a href="#produtos" class="hover:text-periwinkle transition">Ensaios</a></li>
-        <li><a href="/fotolivro" class="hover:text-periwinkle transition">Foto Livro</a></li>
+        <li><a href="#foto-livro" class="hover:text-periwinkle transition">Foto Livro</a></li>
         <li><a href="#contato" class="hover:text-periwinkle transition">Contato</a></li>
       </ul>
       <div class="flex items-center gap-2">
@@ -45,7 +40,7 @@
     <div data-menu class="hidden md:hidden glass mx-4 rounded-2xl p-5">
       <a href="#sobre" class="block py-2">Sobre</a>
       <a href="#produtos" class="block py-2">Ensaios</a>
-      <a href="/fotolivro" class="block py-2">Foto Livro</a>
+      <a href="#foto-livro" class="block py-2">Foto Livro</a>
       <a href="#contato" class="block py-2">Contato</a>
     </div>
   </header>
@@ -53,7 +48,7 @@
   <main class="relative z-10">
     <!-- ===== HERO ===== -->
     <section id="inicio" class="relative min-h-screen flex items-end overflow-hidden">
-      <img data-hero-img data-parallax data-e-src="hero_imagem" src="assets/banner.png" alt="Equipe fotografando"
+      <img data-hero-img data-parallax data-e-src="hero_imagem" src="assets/banner.webp" alt="Equipe fotografando"
            class="absolute inset-0 w-full h-full object-cover grayscale" />
       <div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/10"></div>
       <div data-hero class="relative max-w-7xl mx-auto w-full px-5 pb-20 pt-40 text-white">
@@ -92,7 +87,7 @@
       </div>
       <div data-reveal class="relative">
         <div class="absolute -inset-4 bg-gradient-to-br from-royal to-periwinkle rounded-[2rem] blur-2xl opacity-40"></div>
-        <img data-e-src="sobre_imagem" src="assets/banner.png" alt="Bastidores" class="relative rounded-[2rem] w-full h-[420px] object-cover object-center grayscale hover:grayscale-0 transition duration-700" />
+        <img data-e-src="sobre_imagem" src="assets/banner.webp" alt="Bastidores" class="relative rounded-[2rem] w-full h-[420px] object-cover object-center grayscale hover:grayscale-0 transition duration-700" />
       </div>
     </section>
 
@@ -145,6 +140,39 @@
       </div>
     </section>
 
+    <!-- ===== FOTO LIVRO (produto) ===== -->
+    <section id="foto-livro" class="relative py-28 overflow-hidden">
+      <div class="absolute -top-32 right-0 w-[520px] h-[520px] rounded-full bg-royal blur-[140px] opacity-30 pointer-events-none"></div>
+      <div class="relative max-w-7xl mx-auto px-5 grid lg:grid-cols-2 gap-16 items-center">
+        <div data-reveal class="order-2 lg:order-1">
+          <p class="text-periwinkle font-semibold tracking-widest uppercase text-xs mb-4">Nosso produto</p>
+          <h2 data-e="livro_titulo" class="font-display font-bold text-4xl sm:text-5xl leading-tight">Foto Livro</h2>
+          <p data-e="livro_texto" class="mt-6 text-lg opacity-80">O seu ensaio vira um livro para folhear, guardar e presentear. A gente escolhe as melhores fotos, monta a diagramação e entrega uma história completa, página por página.</p>
+          <ul data-stagger class="mt-8 space-y-3">
+            <li class="flex items-center gap-3"><span class="w-10 h-10 shrink-0 grid place-items-center rounded-xl bg-royal/10 dark:bg-periwinkle/15"><i data-lucide="book-open" class="w-5 h-5 text-royal dark:text-periwinkle"></i></span><span data-e="livro_item1">Diagramação feita sob medida para o seu ensaio</span></li>
+            <li class="flex items-center gap-3"><span class="w-10 h-10 shrink-0 grid place-items-center rounded-xl bg-royal/10 dark:bg-periwinkle/15"><i data-lucide="images" class="w-5 h-5 text-royal dark:text-periwinkle"></i></span><span data-e="livro_item2">Suas melhores fotos com tratamento profissional</span></li>
+            <li class="flex items-center gap-3"><span class="w-10 h-10 shrink-0 grid place-items-center rounded-xl bg-royal/10 dark:bg-periwinkle/15"><i data-lucide="gift" class="w-5 h-5 text-royal dark:text-periwinkle"></i></span><span data-e="livro_item3">Versão virtual para compartilhar com quem você ama</span></li>
+          </ul>
+          <p data-e="livro_preco" class="mt-8 font-display font-bold text-2xl text-royal dark:text-mist" hidden></p>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href="/fotolivro" class="px-8 py-4 rounded-full bg-royal hover:bg-periwinkle text-white font-semibold transition hover:scale-105 inline-flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5"></i> Folhear o foto livro</a>
+            <a href="#contato" data-assunto="Foto Livro" class="px-8 py-4 rounded-full border border-current/30 glass font-semibold transition hover:scale-105">Quero o meu →</a>
+          </div>
+        </div>
+        <a href="/fotolivro" data-reveal class="order-1 lg:order-2 livro3d block mx-auto w-[min(78vw,360px)]" aria-label="Abrir o foto livro">
+          <span class="livro3d-paginas"></span>
+          <span class="livro3d-capa">
+            <img data-e-src="livro_imagem" src="assets/fotolivro/00.jpg" alt="Capa do foto livro" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
+            <span class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></span>
+            <span class="absolute bottom-0 inset-x-0 p-6 text-white">
+              <span class="block text-[10px] uppercase tracking-[.3em] text-mist">Foto Livro</span>
+              <span data-e="nome" class="block font-display font-bold text-2xl mt-1">Anubra Studio</span>
+            </span>
+          </span>
+        </a>
+      </div>
+    </section>
+
     <!-- ===== CONTATO: FORM + CONTATOS DO CLIENTE ===== -->
     <section id="contato" class="max-w-7xl mx-auto px-5 py-28 grid lg:grid-cols-5 gap-10">
       <div data-reveal class="lg:col-span-2">
@@ -170,7 +198,7 @@
         </label>
         <label class="sm:col-span-1 text-sm font-medium">Tipo de ensaio
           <select name="assunto" class="mt-2 w-full rounded-xl px-4 py-3 bg-white dark:bg-black/40 border border-mist/40">
-            <option>Individual</option><option>Casal / Amigos</option><option>Profissional</option><option>Outro</option>
+            <option>Foto Livro</option><option>Individual</option><option>Casal / Amigos</option><option>Profissional</option><option>Outro</option>
           </select>
         </label>
         <label class="sm:col-span-2 text-sm font-medium">Mensagem
@@ -187,7 +215,7 @@
     <div class="max-w-7xl mx-auto px-5 py-12 grid md:grid-cols-3 gap-8 items-center">
       <div>
         <div class="flex items-center gap-3">
-          <img data-e-src="logo" src="assets/logo.png" alt="Logo" class="h-12 w-12 rounded-xl bg-white p-1 object-contain" />
+          <img data-e-src="logo" src="assets/logo.webp" alt="Logo" class="h-12 w-12 rounded-xl bg-white p-1 object-contain" />
           <p data-e="nome" class="font-display font-bold text-2xl">Anubra Studio</p>
         </div>
         <div class="flex gap-3 mt-4">

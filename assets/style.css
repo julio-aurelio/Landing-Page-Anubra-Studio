@@ -35,4 +35,14 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: rgb(var
 .hover-lift { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s; }
 .hover-lift:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgb(var(--royal) / .25); }
 
+/* livro 3D da seção Foto Livro */
+.livro3d { position: relative; aspect-ratio: 3 / 4; perspective: 1600px; animation: flutuar 6s ease-in-out infinite; }
+.livro3d-capa, .livro3d-paginas { position: absolute; inset: 0; border-radius: 6px 18px 18px 6px; transition: transform .9s cubic-bezier(.2,.8,.2,1); transform-origin: left center; }
+.livro3d-capa { overflow: hidden; transform: rotateY(-24deg) rotateX(4deg); box-shadow: 30px 40px 70px rgba(0,0,0,.45), inset 10px 0 18px rgba(0,0,0,.35); }
+.livro3d-capa::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 14px; z-index: 1; background: linear-gradient(90deg, rgba(0,0,0,.45), rgba(255,255,255,.15), transparent); }
+.livro3d-paginas { background: repeating-linear-gradient(90deg, #fbfaf6 0 2px, #e4e1d8 2px 3px); transform: rotateY(-24deg) rotateX(4deg) translate(12px, 6px); }
+.livro3d:hover .livro3d-capa { transform: rotateY(-48deg) rotateX(2deg); }
+.livro3d:hover .livro3d-paginas { transform: rotateY(-16deg) rotateX(2deg) translate(12px, 6px); }
+@keyframes flutuar { 50% { translate: 0 -14px; } }
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
